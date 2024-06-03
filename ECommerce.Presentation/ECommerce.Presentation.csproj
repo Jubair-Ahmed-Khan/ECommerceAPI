@@ -18,8 +18,4 @@
     <ProjectReference Include="..\ECommerce.Service\ECommerce.Service.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
