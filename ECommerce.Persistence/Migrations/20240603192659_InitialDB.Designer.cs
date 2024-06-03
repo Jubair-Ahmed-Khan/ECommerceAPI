@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ECommerce.Persistence.Migrations
 {
     [DbContext(typeof(ECommerceDBContext))]
-    [Migration("20240603114006_InitialDB")]
+    [Migration("20240603192659_InitialDB")]
     partial class InitialDB
     {
         /// <inheritdoc />
@@ -41,6 +41,10 @@ namespace ECommerce.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SearchEngineFriendlyName")
                         .IsRequired()
                         .HasColumnType("text");
 

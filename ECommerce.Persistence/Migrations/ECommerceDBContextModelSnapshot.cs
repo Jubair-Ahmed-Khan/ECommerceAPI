@@ -41,6 +41,10 @@ namespace ECommerce.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("SearchEngineFriendlyName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("ID");
 
                     b.ToTable("Products");

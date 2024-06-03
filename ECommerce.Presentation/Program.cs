@@ -2,6 +2,8 @@
 using ECommerce.Persistence.Contacts;
 using ECommerce.Persistence.Data;
 using ECommerce.Persistence.Repositories;
+using ECommerce.Service.Contacts;
+using ECommerce.Service.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Presentation
@@ -21,6 +23,8 @@ namespace ECommerce.Presentation
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
             builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            builder.Services.AddScoped<IProductService, ProductService>();
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
