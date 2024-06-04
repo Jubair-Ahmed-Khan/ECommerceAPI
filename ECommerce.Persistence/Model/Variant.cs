@@ -16,5 +16,6 @@ namespace ECommerce.Persistence.Model
         public decimal Price { get; set; }
         public Product Product { get; set; }
         public ICollection<Stock> Stocks { get; set; }
+        
     }
 }

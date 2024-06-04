@@ -1,18 +1,11 @@
 ﻿using ECommerce.Persistence.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ECommerce.Persistence.Data
 {
     public class ECommerceDBContext : DbContext
     {
         public ECommerceDBContext(DbContextOptions<ECommerceDBContext> options) : base(options) { }
-        
-        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Product>()
@@ -34,6 +27,5 @@ namespace ECommerce.Persistence.Data
         public DbSet<Variant> Variants { get; set; }
         public DbSet<Stock> Stocks { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
-
     }
 }

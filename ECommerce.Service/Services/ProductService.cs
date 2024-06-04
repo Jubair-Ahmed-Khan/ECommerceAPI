@@ -3,33 +3,31 @@ using ECommerce.Persistence.Model;
 using ECommerce.Service.Contacts;
 using ECommerce.Service.DTOs;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace ECommerce.Service.Services
 {
     public class ProductService : IProductService
     {
-        private readonly IRepository<Product> _productRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ProductService(IRepository<Product> productRepository)
+        public ProductService(IUnitOfWork unitOfWork)
         {
-            _productRepository = productRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Product> GetProductBySearchEngineFriendlyName(string name)
         {
-            var product = await _productRepository.GetProducts();
-            return await product.Where(p => p.SearchEngineFriendlyName.ToLower() == name.ToLower()).FirstOrDefaultAsync();
+            var productRepository =  _unitOfWork.GetRepository<Product>();
+            var products = await productRepository.GetProductBySearchEngineFriendlyName(name);
+
+            return await products.Where(p => p.SearchEngineFriendlyName.ToLower() == name.ToLower()).FirstOrDefaultAsync();
         }
 
         public async Task<List<ResponseDTO>> GetAllProduct(FilterDTO filter, PaginationDTO pagination, string sortBy, bool sortAscending)
         {
-            
-            var product = await _productRepository.GetProducts();
+            var productRepository = _unitOfWork.GetRepository<Product>();
+            var product = await productRepository.GetProducts();
 
             
             product = product.Include(p => p.Variants)
