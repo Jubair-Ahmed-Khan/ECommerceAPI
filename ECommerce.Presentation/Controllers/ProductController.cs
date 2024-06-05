@@ -11,6 +11,8 @@ namespace ECommerce.Presentation.Controllers
     {
         private readonly IProductService _productService;
 
+
+
         public ProductController(IProductService productService)
         {
             _productService = productService;
@@ -57,7 +59,7 @@ namespace ECommerce.Presentation.Controllers
             {
                 return NotFound();
             }
-            return product;
+            return Ok(product);
         }
 
         

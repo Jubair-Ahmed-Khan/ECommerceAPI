@@ -3,6 +3,7 @@ using ECommerce.Persistence.Contacts;
 using ECommerce.Persistence.Data;
 using ECommerce.Persistence.Repositories;
 using ECommerce.Service.Contacts;
+using ECommerce.Service.Resolver;
 using ECommerce.Service.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,24 +15,16 @@ namespace ECommerce.Presentation
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
 
-            builder.Services.AddDbContext<ECommerceDBContext>(options =>
-               options.UseNpgsql(builder.Configuration.GetConnectionString("ECommercePostgres")));
+            DependencyResolverService.Register(builder.Services, builder.Configuration);
+
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-
-            builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            builder.Services.AddScoped<IProductService, ProductService>();
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

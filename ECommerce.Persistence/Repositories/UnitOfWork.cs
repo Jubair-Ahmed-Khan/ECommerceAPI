@@ -1,5 +1,6 @@
 ﻿using ECommerce.Persistence.Contacts;
 using ECommerce.Persistence.Data;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.Linq;

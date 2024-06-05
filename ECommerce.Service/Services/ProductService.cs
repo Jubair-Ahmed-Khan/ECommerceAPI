@@ -3,6 +3,8 @@ using ECommerce.Persistence.Model;
 using ECommerce.Service.Contacts;
 using ECommerce.Service.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using System.Runtime.Caching;
 
 
 namespace ECommerce.Service.Services
@@ -10,16 +12,30 @@ namespace ECommerce.Service.Services
     public class ProductService : IProductService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMemoryCache _cache;
 
-        public ProductService(IUnitOfWork unitOfWork)
+        public ProductService(IUnitOfWork unitOfWork, IMemoryCache cache)
         {
             _unitOfWork = unitOfWork;
+            _cache = cache;
         }
 
         public async Task<Product> GetProductBySearchEngineFriendlyName(string name)
         {
-            var productRepository =  _unitOfWork.GetRepository<Product>();
+
+            var productRepository = _unitOfWork.GetRepository<Product>();
             var products = await productRepository.GetProductBySearchEngineFriendlyName(name);
+
+            string cacheKey = $"cache_{name}";
+
+            if (!_cache.TryGetValue(cacheKey, out Product product))
+            {
+                if (products == null)
+                {
+                    return null;
+                }
+                _cache.Set(cacheKey, product);
+            }
 
             return await products.Where(p => p.SearchEngineFriendlyName.ToLower() == name.ToLower()).FirstOrDefaultAsync();
         }

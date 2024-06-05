@@ -1,12 +1,7 @@
 ﻿using ECommerce.Persistence.Contacts;
 using ECommerce.Persistence.Data;
-using ECommerce.Persistence.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace ECommerce.Persistence.Repositories
 {
