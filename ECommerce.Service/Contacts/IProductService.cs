@@ -1,16 +1,10 @@
 ﻿using ECommerce.Persistence.Model;
 using ECommerce.Service.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace ECommerce.Service.Contacts;
 
-namespace ECommerce.Service.Contacts
+//Product Service Interface
+public interface IProductService
 {
-    public interface IProductService
-    {
-        Task<Product> GetProductBySearchEngineFriendlyName(string name);
-        Task<List<ResponseDTO>> GetAllProduct(FilterDTO filter, PaginationDTO pagination, string sortBy, bool sortAscending);
-    }
+    Task<Product> GetProductBySearchEngineFriendlyName(string name);
+    Task<List<ResponseDTO>> GetAllProduct(FilterDTO filter, PaginationDTO pagination, string sortBy, bool sortAscending);
 }

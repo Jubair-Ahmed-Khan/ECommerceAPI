@@ -4,128 +4,130 @@ using ECommerce.Service.Contacts;
 using ECommerce.Service.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using System.Runtime.Caching;
 
+namespace ECommerce.Service.Services;
 
-namespace ECommerce.Service.Services
+//Product Services
+public class ProductService : IProductService
 {
-    public class ProductService : IProductService
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMemoryCache _cache;
+
+    public ProductService(IUnitOfWork unitOfWork, IMemoryCache cache)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMemoryCache _cache;
+        _unitOfWork = unitOfWork;
+        _cache = cache;
+    }
 
-        public ProductService(IUnitOfWork unitOfWork, IMemoryCache cache)
+    // Get Product by Search Engine Friendly Name
+    public async Task<Product> GetProductBySearchEngineFriendlyName(string name)
+    {
+
+        var productRepository = _unitOfWork.GetRepository<Product>();
+        var products = await productRepository.GetProductBySearchEngineFriendlyName(name);
+
+        string cacheKey = $"cache_{name}";
+
+        if (!_cache.TryGetValue(cacheKey, out Product product))
         {
-            _unitOfWork = unitOfWork;
-            _cache = cache;
+            if (products == null)
+            {
+                return null;
+            }
+            _cache.Set(cacheKey, product);
         }
 
-        public async Task<Product> GetProductBySearchEngineFriendlyName(string name)
+        return await products.Where(p => p.SearchEngineFriendlyName.ToLower() == name.ToLower()).FirstOrDefaultAsync();
+    }
+
+    //Get All Products
+    public async Task<List<ResponseDTO>> GetAllProduct(FilterDTO filter, PaginationDTO pagination, string sortBy, bool sortAscending)
+    {
+        var productRepository = _unitOfWork.GetRepository<Product>();
+        var product = await productRepository.GetProducts();
+
+        
+        product = product.Include(p => p.Variants)
+                     .ThenInclude(v => v.Stocks)
+                     .ThenInclude(s => s.Warehouse);
+
+
+        if (!string.IsNullOrWhiteSpace(filter.ProductName))
         {
-
-            var productRepository = _unitOfWork.GetRepository<Product>();
-            var products = await productRepository.GetProductBySearchEngineFriendlyName(name);
-
-            string cacheKey = $"cache_{name}";
-
-            if (!_cache.TryGetValue(cacheKey, out Product product))
-            {
-                if (products == null)
-                {
-                    return null;
-                }
-                _cache.Set(cacheKey, product);
-            }
-
-            return await products.Where(p => p.SearchEngineFriendlyName.ToLower() == name.ToLower()).FirstOrDefaultAsync();
+            product = product.Where(p => p.Name.ToLower().Contains(filter.ProductName.ToLower()));
         }
 
-        public async Task<List<ResponseDTO>> GetAllProduct(FilterDTO filter, PaginationDTO pagination, string sortBy, bool sortAscending)
+        if (!string.IsNullOrWhiteSpace(filter.WarehouseName))
         {
-            var productRepository = _unitOfWork.GetRepository<Product>();
-            var product = await productRepository.GetProducts();
+            product = product.Where(p => p.Variants.Any(v => v.Stocks.Any(s => s.Warehouse.Name.ToLower() == filter.WarehouseName.ToLower())));
+        }
 
-            
-            product = product.Include(p => p.Variants)
-                         .ThenInclude(v => v.Stocks)
-                         .ThenInclude(s => s.Warehouse);
-
-
-            if (!string.IsNullOrWhiteSpace(filter.ProductName))
+        if (filter.InStock.HasValue)
+        {
+            if ((bool)filter.InStock)
             {
-                product = product.Where(p => p.Name.ToLower().Contains(filter.ProductName.ToLower()));
+                product = product.Where(p => p.Variants.Any(v => v.Stocks.Any(s => s.Quantity > 0)));
             }
-
-            if (!string.IsNullOrWhiteSpace(filter.WarehouseName))
+            else
             {
-                product = product.Where(p => p.Variants.Any(v => v.Stocks.Any(s => s.Warehouse.Name.ToLower() == filter.WarehouseName.ToLower())));
+                product = product.Where(p => !p.Variants.Any(v => v.Stocks.Any(s => s.Quantity > 0)));
             }
+        }
 
-            if (filter.InStock.HasValue)
+        if (!string.IsNullOrWhiteSpace(filter.VariantColor))
+        {
+            product = product.Where(p => p.Variants.Any(v => v.Color.ToLower() == filter.VariantColor.ToLower()));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.VariantSize))
+        {
+            product = product.Where(p => p.Variants.Any(v => v.Size.ToLower() == filter.VariantSize.ToLower()));
+        }
+
+        
+        // Sorting
+        switch (sortBy)
+        {
+            case "Name":
+                // Sorting by Name
+                product = sortAscending ? product.OrderBy(p => p.Name) : product.OrderByDescending(p => p.Name);
+                break;
+            case "SearchEngineFriendlyName":
+                // Sorting by SearchEngineFriendlyName
+                product = sortAscending ? product.OrderBy(p => p.SearchEngineFriendlyName) : product.OrderByDescending(p => p.SearchEngineFriendlyName);
+                break;
+            case "CumulativeStock":
+                // Cumulative Stock Sorting
+                product = sortAscending ? product.OrderBy(p => p.Variants.Sum(v => v.Stocks.Sum(s => s.Quantity))) :
+                                         product.OrderByDescending(p => p.Variants.Sum(v => v.Stocks.Sum(s => s.Quantity)));
+                break;
+            default:
+                product = product.OrderBy(p => p.CreatedOn);
+                break;
+        }
+
+        //Pagination
+        var products = await product.Skip(pagination.PageSize * (pagination.Page - 1))
+                                  .Take(pagination.PageSize)
+                                  .ToListAsync();
+
+        //Product to ProductResponseDTO Mapping
+        var productDtos = products.Select(product => new ResponseDTO
+        {
+            ProductName = product.Name,
+            InStock = product.Variants.Any(v => v.Stocks.Any(s => s.Quantity > 0)),
+            Variants = product.Variants.Select(v => new VariantDTO
             {
-                if ((bool)filter.InStock)
+                Color = v.Color,
+                Size = v.Size,
+                WarehouseStocks = v.Stocks.Select(s => new WarehouseStockDTO
                 {
-                    product = product.Where(p => p.Variants.Any(v => v.Stocks.Any(s => s.Quantity > 0)));
-                }
-                else
-                {
-                    product = product.Where(p => !p.Variants.Any(v => v.Stocks.Any(s => s.Quantity > 0)));
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(filter.VariantColor))
-            {
-                product = product.Where(p => p.Variants.Any(v => v.Color.ToLower() == filter.VariantColor.ToLower()));
-            }
-
-            if (!string.IsNullOrWhiteSpace(filter.VariantSize))
-            {
-                product = product.Where(p => p.Variants.Any(v => v.Size.ToLower() == filter.VariantSize.ToLower()));
-            }
-
-            
-            // Apply sorting
-            switch (sortBy)
-            {
-                case "Name":
-                    product = sortAscending ? product.OrderBy(p => p.Name) : product.OrderByDescending(p => p.Name);
-                    break;
-                case "SearchEngineFriendlyName":
-                    product = sortAscending ? product.OrderBy(p => p.SearchEngineFriendlyName) : product.OrderByDescending(p => p.SearchEngineFriendlyName);
-                    break;
-                case "CumulativeStock":
-                    // Calculate cumulative stock and sort by it
-                    product = sortAscending ? product.OrderBy(p => p.Variants.Sum(v => v.Stocks.Sum(s => s.Quantity))) :
-                                             product.OrderByDescending(p => p.Variants.Sum(v => v.Stocks.Sum(s => s.Quantity)));
-                    break;
-                default:
-                    product = product.OrderBy(p => p.CreatedOn);
-                    break;
-            }
-
-            // Apply pagination
-            var products = await product.Skip(pagination.PageSize * (pagination.Page - 1))
-                                      .Take(pagination.PageSize)
-                                      .ToListAsync();
-
-            // Map Product entities to ProductResponseDTO objects
-            var productDtos = products.Select(product => new ResponseDTO
-            {
-                ProductName = product.Name,
-                InStock = product.Variants.Any(v => v.Stocks.Any(s => s.Quantity > 0)),
-                Variants = product.Variants.Select(v => new VariantDTO
-                {
-                    Color = v.Color,
-                    Size = v.Size,
-                    WarehouseStocks = v.Stocks.Select(s => new WarehouseStockDTO
-                    {
-                        WarehouseName = s.Warehouse.Name,
-                        Quantity = s.Quantity
-                    }).ToList()
+                    WarehouseName = s.Warehouse.Name,
+                    Quantity = s.Quantity
                 }).ToList()
-            }).ToList();
+            }).ToList()
+        }).ToList();
 
-            return productDtos;
-        }
+        return productDtos;
     }
 }

@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace ECommerce.Service.DTOs;
 
-namespace ECommerce.Service.DTOs
+//Product Response DTO
+public class ResponseDTO
 {
-    public class ResponseDTO
-    {
-        public string ProductName { get; set; }
-        public bool InStock { get; set; }
-        public List<VariantDTO> Variants { get; set; }
-    }
+    public string ProductName { get; set; }
+    public bool InStock { get; set; }
+    public List<VariantDTO> Variants { get; set; }
 }

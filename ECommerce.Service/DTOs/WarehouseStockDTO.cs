@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace ECommerce.Service.DTOs;
 
-namespace ECommerce.Service.DTOs
+//Stock Per Warehouse DTO
+public class WarehouseStockDTO
 {
-    public class WarehouseStockDTO
-    {
-        public string WarehouseName { get; set; }
-        public int Quantity { get; set; }
-    }
+    public string WarehouseName { get; set; }
+    public int Quantity { get; set; }
 }

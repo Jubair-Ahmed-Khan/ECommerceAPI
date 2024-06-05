@@ -2,24 +2,26 @@
 using ECommerce.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 
+namespace ECommerce.Persistence.Repositories;
 
-namespace ECommerce.Persistence.Repositories
+//Generic Repository
+public class Repository<T> : IRepository<T> where T : class
 {
-    public class Repository<T> : IRepository<T> where T : class
+    private readonly DbSet<T> _dbSet;
+    public Repository(ECommerceDBContext context)
     {
-        private readonly DbSet<T> _dbSet;
-        public Repository(ECommerceDBContext context)
-        {
-            _dbSet = context.Set<T>();
-        }
-        public async Task<IQueryable<T>> GetProducts()
-        {
-            return _dbSet.AsQueryable();
-        }
+        _dbSet = context.Set<T>();
+    }
 
-        public async Task<IQueryable<T>> GetProductBySearchEngineFriendlyName(string searchEngineFriendlyName)
-        {
-            return _dbSet.AsQueryable();
-        }
+    //Get All Product Method
+    public async Task<IQueryable<T>> GetProducts()
+    {
+        return _dbSet.AsQueryable();
+    }
+
+    //Get Products by Search Engine Friendly Name
+    public async Task<IQueryable<T>> GetProductBySearchEngineFriendlyName(string searchEngineFriendlyName)
+    {
+        return _dbSet.AsQueryable();
     }
 }
